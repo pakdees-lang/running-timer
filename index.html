@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="จับเวลาวิ่ง">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>แอปจับเวลาวิ่งนักกีฬา</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <style>
+    :root{--bg:#0f172a;--card:#111827;--muted:#94a3b8;--text:#f8fafc;--accent:#22c55e;--danger:#ef4444;--warn:#f59e0b;--line:#334155;--btn:#1f2937}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;background:linear-gradient(180deg,#0f172a,#020617);color:var(--text)}
+    header{padding:18px 16px 10px;text-align:center;position:sticky;top:0;background:rgba(15,23,42,.92);backdrop-filter:blur(8px);z-index:5;border-bottom:1px solid var(--line)}
+    h1{font-size:21px;margin:0 0 4px}.sub{color:var(--muted);font-size:13px}
+    main{max-width:760px;margin:0 auto;padding:14px}.card{background:rgba(17,24,39,.92);border:1px solid var(--line);border-radius:18px;padding:14px;margin:12px 0;box-shadow:0 12px 30px rgba(0,0,0,.22)}
+    .timer{font-variant-numeric:tabular-nums;text-align:center;font-size:50px;font-weight:800;letter-spacing:1px;margin:6px 0 12px}
+    .row{display:flex;gap:8px;flex-wrap:wrap}button,input{font:inherit}
+    button{border:0;border-radius:14px;padding:12px 14px;background:var(--btn);color:var(--text);font-weight:700;cursor:pointer}
+    button:active{transform:translateY(1px)}.primary{background:var(--accent);color:#052e16}.danger{background:var(--danger);color:white}.warn{background:var(--warn);color:#431407}.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+    .bigRecord{width:100%;font-size:24px;padding:20px;border-radius:20px;margin-top:10px}
+    input{width:100%;border:1px solid var(--line);border-radius:14px;background:#020617;color:var(--text);padding:12px}
+    label{display:block;color:var(--muted);font-size:13px;margin:8px 0 5px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid var(--line);padding:9px 6px;text-align:left}th{color:#cbd5e1}.right{text-align:right}.muted{color:var(--muted)}
+    .athlete{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;margin:8px 0;background:#020617}
+    .badge{font-size:12px;color:#bbf7d0;background:#064e3b;padding:4px 8px;border-radius:999px}.small{font-size:12px;padding:8px 10px;border-radius:10px}.footer{font-size:12px;color:var(--muted);text-align:center;padding:18px}.count{color:#cbd5e1;font-size:13px;margin-top:10px}
+    .nextBox{padding:12px;border:1px solid var(--line);border-radius:14px;background:#020617;margin-top:10px;text-align:center}
+    .nextName{font-size:22px;font-weight:800;color:#bbf7d0}
+    .help{font-size:12px;color:var(--muted);line-height:1.5;margin-top:8px}
+    #installBox{display:none}
+    @media(max-width:520px){.timer{font-size:42px}.grid{grid-template-columns:1fr}.row button{flex:1}.bigRecord{font-size:22px}}
+  </style>
+</head>
+<body>
+<header>
+  <h1>แอปจับเวลาวิ่งนักกีฬา</h1>
+  <div class="sub">ติดตั้งบน Android ได้ • ใช้งานออฟไลน์ • แชร์ผลไป LINE/Messenger</div>
+</header>
+<main>
+  <section class="card" id="installBox">
+    <h3 style="margin:0 0 8px">ติดตั้งเป็นแอปบนมือถือ</h3>
+    <div class="help">กดปุ่มติดตั้ง เพื่อเพิ่มไอคอน “จับเวลาวิ่ง” บนหน้าจอหลัก Android</div>
+    <div class="row" style="margin-top:10px">
+      <button class="primary" id="installBtn">ติดตั้งแอป</button>
+      <button class="ghost" id="hideInstallBtn">ซ่อนไว้ก่อน</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="timer" id="display">00:00.000</div>
+    <div class="row">
+      <button class="primary" id="startBtn">เริ่ม</button>
+      <button class="warn" id="pauseBtn">พัก</button>
+      <button class="danger" id="resetBtn">รีเซ็ตเวลา</button>
+    </div>
+    <div class="nextBox">
+      <div class="muted">คนถัดไปที่จะบันทึก</div>
+      <div class="nextName" id="nextAthlete">ยังไม่มีรายชื่อ</div>
+    </div>
+    <button class="primary bigRecord" id="recordNextBtn">บันทึกเวลาคนถัดไป</button>
+  </section>
+
+  <section class="card">
+    <div class="grid">
+      <div><label>ชื่อกิจกรรม/รายการวิ่ง</label><input id="eventName" placeholder="เช่น วิ่ง 100 เมตร / ฝึกซ้อม"></div>
+      <div><label>ระยะทาง</label><input id="distance" placeholder="เช่น 100 ม., 400 ม., 5 กม."></div>
+    </div>
+    <label>เพิ่มนักกีฬา เรียงตามลำดับเข้าเส้นชัย/ลำดับที่ต้องการบันทึก</label>
+    <div class="row"><input id="athleteName" placeholder="พิมพ์ชื่อนักกีฬา"><button id="addAthleteBtn">เพิ่ม</button></div>
+    <div class="count" id="recordCount">ผลที่บันทึกแล้ว 0/100 คน</div>
+    <div id="athletes"></div>
+  </section>
+
+  <section class="card">
+    <div class="row">
+      <button class="primary" id="exportCsvBtn">ดาวน์โหลดตาราง Excel</button>
+      <button class="ghost" id="openCsvBtn">เปิดตารางสำรอง</button>
+      <button class="ghost" id="copyBtn">คัดลอกตาราง</button>
+      <button class="primary" id="shareBtn">แชร์ผลไป LINE/Messenger</button>
+      <button class="danger" id="clearResultsBtn">ล้างเฉพาะผลเวลา</button>
+      <button class="danger" id="clearBtn">ล้างทั้งหมด</button>
+    </div>
+    <div class="help">เมนูแชร์จะใช้ระบบแชร์ของ Android สามารถเลือก LINE, Messenger, Gmail หรือแอปอื่นที่ติดตั้งไว้ได้</div>
+  </section>
+
+  <section class="card">
+    <h3 style="margin:0 0 10px">ผลการจับเวลา</h3>
+    <div style="overflow:auto">
+      <table>
+        <thead><tr><th>ลำดับ</th><th>นักกีฬา</th><th>เวลา mm:ss.000</th><th>กิจกรรม</th><th>ระยะทาง</th><th>วันเวลา</th><th></th></tr></thead>
+        <tbody id="results"></tbody>
+      </table>
+    </div>
+  </section>
+  <div class="footer">ข้อมูลถูกเก็บในเครื่องนี้ ใช้งานออฟไลน์ได้หลังเปิดใช้งานครั้งแรก</div>
+</main>
+
+<script>
+const MAX_RECORDS = 100;
+let running=false, startTime=0, elapsed=0, tick=null;
+let athletes = JSON.parse(localStorage.getItem("athletes") || "[]");
+let records = JSON.parse(localStorage.getItem("records") || "[]");
+const $ = id => document.getElementById(id);
+const display = $("display");
+
+function format(ms){
+  const totalMs = Math.floor(ms);
+  const milli = totalMs % 1000;
+  const totalSec = Math.floor(totalMs / 1000);
+  const s = totalSec % 60;
+  const m = Math.floor(totalSec / 60);
+  return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}.${String(milli).padStart(3,"0")}`;
+}
+function nowMs(){ return performance.now(); }
+function update(){ display.textContent = format(running ? elapsed + (nowMs()-startTime) : elapsed); }
+function save(){ localStorage.setItem("athletes", JSON.stringify(athletes)); localStorage.setItem("records", JSON.stringify(records)); }
+function escapeHtml(s){return String(s || "").replace(/[&<>"']/g, function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m];});}
+function currentElapsed(){ return running ? elapsed + (nowMs()-startTime) : elapsed; }
+
+function updateStatus(){
+  $("recordCount").textContent = `ผลที่บันทึกแล้ว ${records.length}/${MAX_RECORDS} คน`;
+  const idx = records.length;
+  if(records.length >= MAX_RECORDS) $("nextAthlete").textContent = "บันทึกครบ 100 คนแล้ว";
+  else if(idx < athletes.length) $("nextAthlete").textContent = `${idx+1}. ${athletes[idx]}`;
+  else $("nextAthlete").textContent = "ไม่มีนักกีฬาคนถัดไป";
+}
+
+function renderAthletes(){
+  const box = $("athletes"); box.innerHTML = "";
+  if(!athletes.length){ box.innerHTML = `<p class="muted">ยังไม่มีรายชื่อนักกีฬา</p>`; updateStatus(); return; }
+  athletes.forEach((name,i)=>{
+    const isDone = i < records.length;
+    const isNext = i === records.length;
+    const div=document.createElement("div");
+    div.className="athlete";
+    div.innerHTML = `<div>${i+1}</div><div><b>${escapeHtml(name)}</b> ${isDone ? '<span class="badge">บันทึกแล้ว</span>' : isNext ? '<span class="badge">คนถัดไป</span>' : ''}</div>
+    <button class="ghost small" onclick="removeAthlete(${i})">ลบ</button>`;
+    box.appendChild(div);
+  });
+  updateStatus();
+}
+
+function renderRecords(){
+  const tb = $("results"); tb.innerHTML = "";
+  records.forEach((r,i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML = `<td>${i+1}</td><td>${escapeHtml(r.name)}</td><td class="right">${r.time}</td><td>${escapeHtml(r.eventName)}</td><td>${escapeHtml(r.distance)}</td><td>${escapeHtml(r.datetime)}</td><td><button class="ghost small" onclick="deleteRecord(${i})">ลบ</button></td>`;
+    tb.appendChild(tr);
+  });
+  renderAthletes();
+  updateStatus();
+}
+
+$("startBtn").onclick=()=>{ if(!running){ running=true; startTime=nowMs(); tick=setInterval(update,16); } };
+$("pauseBtn").onclick=()=>{ if(running){ elapsed += nowMs()-startTime; running=false; clearInterval(tick); update(); } };
+$("resetBtn").onclick=()=>{ running=false; clearInterval(tick); elapsed=0; update(); };
+
+$("addAthleteBtn").onclick=()=>{
+  const name=$("athleteName").value.trim();
+  if(!name) return alert("กรุณาพิมพ์ชื่อนักกีฬา");
+  if(athletes.length >= MAX_RECORDS) return alert("เพิ่มรายชื่อได้สูงสุด 100 คน");
+  athletes.push(name); $("athleteName").value=""; save(); renderAthletes();
+};
+
+$("recordNextBtn").onclick=()=>{
+  if(records.length >= MAX_RECORDS) return alert(`บันทึกผลครบ ${MAX_RECORDS} คนแล้ว`);
+  if(records.length >= athletes.length) return alert("ไม่มีนักกีฬาคนถัดไป กรุณาเพิ่มรายชื่อก่อน");
+  const ms=currentElapsed();
+  if(ms<=0) return alert("กรุณากดเริ่มจับเวลาก่อน");
+  const i = records.length;
+  records.push({name:athletes[i],time:format(ms),milliseconds:Math.round(ms),eventName:$("eventName").value.trim(),distance:$("distance").value.trim(),datetime:new Date().toLocaleString("th-TH")});
+  save(); renderRecords();
+};
+
+window.removeAthlete=(i)=>{
+  if(i < records.length && !confirm("นักกีฬาคนนี้มีผลเวลาแล้ว หากลบจะทำให้ลำดับผลเวลาไม่ตรง ต้องการลบหรือไม่?")) return;
+  athletes.splice(i,1); save(); renderAthletes();
+};
+window.deleteRecord=(i)=>{ records.splice(i,1); save(); renderRecords(); };
+
+function tableRows(rows){
+  const header=["ลำดับ","นักกีฬา","เวลา mm:ss.000","มิลลิวินาที","กิจกรรม","ระยะทาง","วันเวลา"];
+  const data=rows.map((r,i)=>[i+1,r.name,r.time,r.milliseconds,r.eventName,r.distance,r.datetime]);
+  return [header,...data];
+}
+function toTsv(rows){return tableRows(rows).map(row => row.map(v => String(v ?? "").replace(/\t/g," ").replace(/\r?\n/g," ")).join("\t")).join("\n");}
+function toShareText(rows){
+  const eventName = $("eventName").value || (records[0] && records[0].eventName) || "ผลการแข่งขันวิ่ง";
+  const distance = $("distance").value || (records[0] && records[0].distance) || "";
+  let lines = [`ผลการแข่งขัน: ${eventName}${distance ? " ระยะทาง " + distance : ""}`, ""];
+  lines.push("ลำดับ\tนักกีฬา\tเวลา");
+  rows.forEach((r,i)=>lines.push(`${i+1}\t${r.name}\t${r.time}`));
+  return lines.join("\n");
+}
+function toExcelHtml(rows){
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+  const trs = tableRows(rows).map((row, ri) => {
+    const tag = ri === 0 ? "th" : "td";
+    return "<tr>" + row.map(v => `<${tag} style="border:1px solid #999;padding:6px;mso-number-format:'\\@';">${esc(v)}</${tag}>`).join("") + "</tr>";
+  }).join("");
+  return `<!doctype html><html><head><meta charset="utf-8"><style>table{border-collapse:collapse;font-family:Tahoma,Arial,sans-serif;font-size:12pt}th{background:#d9ead3;font-weight:bold}td,th{border:1px solid #999;padding:6px}</style></head><body><table>${trs}</table></body></html>`;
+}
+function safeFileName(text){
+  let name = String(text || "").trim();
+  if(!name && records.length > 0) name = String(records[0].eventName || "").trim();
+  if(!name) name = "running_timer";
+  name = name.replace(/[\\/:*?"<>|]/g, "_").replace(/\s+/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, "");
+  if(!name) name = "running_timer";
+  return name.slice(0,80);
+}
+function getExportName(ext){return `${safeFileName($("eventName").value)}_${new Date().toISOString().slice(0,10)}.${ext}`;}
+function downloadText(text, filename, mimeType){
+  const blob = new Blob([text], {type:mimeType});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.style.display = "none";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);}, 1000);
+}
+$("exportCsvBtn").onclick=()=>{
+  if(!records.length) return alert("ยังไม่มีข้อมูลผลการจับเวลา");
+  try{downloadText("\ufeff" + toExcelHtml(records), getExportName("xls"), "application/vnd.ms-excel;charset=utf-8");}
+  catch(err){alert("ดาวน์โหลดไม่ได้ กรุณาใช้ปุ่ม เปิดตารางสำรอง หรือ คัดลอกตาราง");}
+};
+$("openCsvBtn").onclick=()=>{
+  if(!records.length) return alert("ยังไม่มีข้อมูลผลการจับเวลา");
+  const blob = new Blob(["\ufeff" + toTsv(records)], {type:"text/tab-separated-values;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, "_blank");
+  if(!win) alert("เบราว์เซอร์บล็อกการเปิดไฟล์ กรุณาใช้ปุ่มคัดลอกตาราง");
+  setTimeout(()=>URL.revokeObjectURL(url), 60000);
+};
+$("copyBtn").onclick=async()=>{
+  if(!records.length) return alert("ยังไม่มีข้อมูลให้คัดลอก");
+  const tabText = toTsv(records);
+  try{await navigator.clipboard.writeText(tabText); alert("คัดลอกตารางแล้ว สามารถวางใน Excel ได้เลย");}
+  catch(err){prompt("คัดลอกข้อมูลด้านล่าง แล้วนำไปวางใน Excel", tabText);}
+};
+$("shareBtn").onclick=async()=>{
+  if(!records.length) return alert("ยังไม่มีข้อมูลผลการแข่งขันสำหรับแชร์");
+  const shareText = toShareText(records);
+  const title = $("eventName").value || "ผลการแข่งขันวิ่ง";
+  if(navigator.share){
+    try{ await navigator.share({title:title, text:shareText}); }
+    catch(err){}
+  }else{
+    try{ await navigator.clipboard.writeText(shareText); alert("เครื่องนี้ไม่รองรับเมนูแชร์ จึงคัดลอกผลการแข่งขันให้แล้ว นำไปวางใน LINE/Messenger ได้เลย"); }
+    catch(err){ prompt("คัดลอกผลการแข่งขัน แล้วนำไปวางใน LINE/Messenger", shareText); }
+  }
+};
+$("clearResultsBtn").onclick=()=>{if(confirm("ต้องการล้างเฉพาะผลเวลา แต่เก็บรายชื่อนักกีฬาไว้หรือไม่?")){records=[]; save(); renderRecords();}};
+$("clearBtn").onclick=()=>{if(confirm("ต้องการล้างรายชื่อและผลทั้งหมดหรือไม่?")){athletes=[]; records=[]; elapsed=0; running=false; clearInterval(tick); save(); update(); renderAthletes(); renderRecords();}};
+
+// PWA install prompt
+let deferredPrompt = null;
+window.addEventListener("beforeinstallprompt", (e)=>{
+  e.preventDefault();
+  deferredPrompt = e;
+  if(localStorage.getItem("hideInstallBox") !== "1") $("installBox").style.display = "block";
+});
+$("installBtn").onclick = async ()=>{
+  if(!deferredPrompt) return alert("หากไม่ขึ้นปุ่มติดตั้ง ให้เปิดเมนู Chrome แล้วเลือก เพิ่มไปยังหน้าจอหลัก");
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  $("installBox").style.display = "none";
+};
+$("hideInstallBtn").onclick = ()=>{localStorage.setItem("hideInstallBox","1"); $("installBox").style.display="none";};
+
+// Service worker for offline use
+if("serviceWorker" in navigator){
+  window.addEventListener("load", ()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+}
+renderAthletes(); renderRecords(); update();
+</script>
+</body>
+</html>
