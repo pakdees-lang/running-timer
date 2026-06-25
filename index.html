@@ -20,17 +20,17 @@ button{border:0;border-radius:14px;padding:12px 14px;background:var(--btn);color
 .primary{background:var(--accent);color:#052e16}.danger{background:var(--danger);color:#fff}.warn{background:var(--warn);color:#431407}.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
 .bigRecord{width:100%;font-size:24px;padding:20px;border-radius:20px;margin-top:10px}
 input{width:100%;border:1px solid var(--line);border-radius:14px;background:#020617;color:var(--text);padding:12px}
-label{display:block;color:var(--muted);font-size:13px;margin:8px 0 5px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;color:var(--muted);font-size:13px;margin:8px 0 5px}.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid var(--line);padding:9px 6px;text-align:left}th{color:#cbd5e1}.right{text-align:right}
 .muted,.help,.footer{color:var(--muted)}.help{font-size:12px;line-height:1.5;margin-top:8px}.footer{font-size:12px;text-align:center;padding:18px}.count{color:#cbd5e1;font-size:13px;margin-top:10px}
 .nextBox{padding:12px;border:1px solid var(--line);border-radius:14px;background:#020617;margin-top:10px;text-align:center}.nextName{font-size:22px;font-weight:800;color:#bbf7d0}
-#installBox{display:none}@media(max-width:520px){.timer{font-size:42px}.grid{grid-template-columns:1fr}.row button{flex:1}.bigRecord{font-size:22px}}
+#installBox{display:none}@media(max-width:650px){.timer{font-size:42px}.grid{grid-template-columns:1fr}.row button{flex:1}.bigRecord{font-size:22px}}
 </style>
 </head>
 <body>
 <header>
 <h1>แอปจับเวลาวิ่งนักกีฬา</h1>
-<div class="sub">เสียงปืนดังขึ้น • เสียงติ๊กเมื่อบันทึก • ใช้งานออฟไลน์</div>
+<div class="sub">เพิ่มช่องกลุ่ม • เสียงปืน/เสียงติ๊ก • ส่งออก Excel</div>
 </header>
 <main>
 <section class="card" id="installBox">
@@ -55,6 +55,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 <section class="card">
 <div class="grid">
 <div><label>ชื่อกิจกรรม/รายการวิ่ง</label><input id="eventName" placeholder="เช่น วิ่ง 100 เมตร / ฝึกซ้อม"></div>
+<div><label>กลุ่ม</label><input id="groupName" placeholder="เช่น กลุ่ม 1 / 101g1 / รอบที่ 1"></div>
 <div><label>ระยะทาง</label><input id="distance" placeholder="เช่น 100 ม., 400 ม., 5 กม."></div>
 </div>
 <div class="count" id="recordCount">บันทึกแล้ว 0/100 Lab</div>
@@ -74,7 +75,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 
 <section class="card">
 <h3 style="margin:0 0 10px">ผลการจับเวลา</h3>
-<div style="overflow:auto"><table><thead><tr><th>ลำดับ</th><th>รายการ</th><th>เวลา mm:ss.000</th><th>มิลลิวินาที</th><th>กิจกรรม</th><th>ระยะทาง</th><th>วันเวลา</th><th></th></tr></thead><tbody id="results"></tbody></table></div>
+<div style="overflow:auto"><table><thead><tr><th>ลำดับ</th><th>รายการ</th><th>เวลา mm:ss.000</th><th>มิลลิวินาที</th><th>กิจกรรม</th><th>กลุ่ม</th><th>ระยะทาง</th><th>วันเวลา</th><th></th></tr></thead><tbody id="results"></tbody></table></div>
 </section>
 <div class="footer">ข้อมูลถูกเก็บในเครื่องนี้ ใช้งานออฟไลน์ได้หลังเปิดใช้งานครั้งแรก</div>
 </main>
@@ -82,7 +83,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 <script>
 const MAX_RECORDS=100;
 let running=false,startTime=0,elapsed=0,tick=null;
-let records=JSON.parse(localStorage.getItem("records_v11")||localStorage.getItem("records_v8")||localStorage.getItem("records")||"[]");
+let records=JSON.parse(localStorage.getItem("records_v12")||localStorage.getItem("records_v11")||localStorage.getItem("records_v8")||localStorage.getItem("records")||"[]");
 const $=id=>document.getElementById(id);
 let audioCtx=null;
 
@@ -126,19 +127,19 @@ async function playRecordTick(){
 function format(ms){const t=Math.floor(ms), milli=t%1000, sec=Math.floor(t/1000), s=sec%60, m=Math.floor(sec/60);return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}.${String(milli).padStart(3,"0")}`;}
 function currentElapsed(){return running?elapsed+(performance.now()-startTime):elapsed;}
 function update(){display.textContent=format(currentElapsed());}
-function save(){localStorage.setItem("records_v11",JSON.stringify(records));}
+function save(){localStorage.setItem("records_v12",JSON.stringify(records));}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
 function updateStatus(){recordCount.textContent=`บันทึกแล้ว ${records.length}/${MAX_RECORDS} Lab`; nextLab.textContent=records.length>=MAX_RECORDS?"บันทึกครบ 100 Lab แล้ว":`Lab${records.length+1}`;}
 async function addLabRecord(ms){
   if(records.length>=MAX_RECORDS) return alert(`บันทึกครบ ${MAX_RECORDS} Lab แล้ว`);
   if(ms<=0) return alert("กรุณากดเริ่มจับเวลาก่อน");
   const lab=`Lab${records.length+1}`;
-  records.push({name:lab,time:format(ms),milliseconds:Math.round(ms),eventName:eventName.value.trim(),distance:distance.value.trim(),datetime:new Date().toLocaleString("th-TH")});
+  records.push({name:lab,time:format(ms),milliseconds:Math.round(ms),eventName:eventName.value.trim(),groupName:groupName.value.trim(),distance:distance.value.trim(),datetime:new Date().toLocaleString("th-TH")});
   save(); renderRecords(); await playRecordTick();
 }
 function renderRecords(){
   results.innerHTML="";
-  records.forEach((r,i)=>{const tr=document.createElement("tr");tr.innerHTML=`<td>${i+1}</td><td>${esc(r.name)}</td><td class="right">${r.time}</td><td class="right">${r.milliseconds}</td><td>${esc(r.eventName)}</td><td>${esc(r.distance)}</td><td>${esc(r.datetime)}</td><td><button class="ghost" onclick="deleteRecord(${i})">ลบ</button></td>`;results.appendChild(tr);});
+  records.forEach((r,i)=>{const tr=document.createElement("tr");tr.innerHTML=`<td>${i+1}</td><td>${esc(r.name)}</td><td class="right">${r.time}</td><td class="right">${r.milliseconds}</td><td>${esc(r.eventName)}</td><td>${esc(r.groupName||"")}</td><td>${esc(r.distance)}</td><td>${esc(r.datetime)}</td><td><button class="ghost" onclick="deleteRecord(${i})">ลบ</button></td>`;results.appendChild(tr);});
   updateStatus();
 }
 startBtn.onclick=async()=>{if(!running){await playStartGun();running=true;startTime=performance.now();tick=setInterval(update,16);}};
@@ -148,11 +149,11 @@ resetBtn.onclick=()=>{running=false;clearInterval(tick);elapsed=0;update();};
 testSoundBtn.onclick=async()=>{await playStartGun();setTimeout(()=>playRecordTick(),450);};
 window.deleteRecord=i=>{records.splice(i,1);save();renderRecords();};
 
-function tableRows(rows){const h=["ลำดับ","รายการ","เวลา mm:ss.000","มิลลิวินาที","กิจกรรม","ระยะทาง","วันเวลา"];return [h,...rows.map((r,i)=>[i+1,r.name,r.time,r.milliseconds,r.eventName,r.distance,r.datetime])];}
+function tableRows(rows){const h=["ลำดับ","รายการ","เวลา mm:ss.000","มิลลิวินาที","กิจกรรม","กลุ่ม","ระยะทาง","วันเวลา"];return [h,...rows.map((r,i)=>[i+1,r.name,r.time,r.milliseconds,r.eventName,(r.groupName||""),r.distance,r.datetime])];}
 function toTsv(rows){return tableRows(rows).map(row=>row.map(v=>String(v??"").replace(/\t/g," ").replace(/\r?\n/g," ")).join("\t")).join("\n");}
 function toExcelHtml(rows){const trs=tableRows(rows).map((row,ri)=>{const tag=ri===0?"th":"td";return "<tr>"+row.map(v=>`<${tag} style="border:1px solid #999;padding:6px;mso-number-format:'\\@';">${esc(v)}</${tag}>`).join("")+"</tr>";}).join("");return `<!doctype html><html><head><meta charset="utf-8"><style>table{border-collapse:collapse;font-family:Tahoma;font-size:12pt}th{background:#d9ead3}</style></head><body><table>${trs}</table></body></html>`;}
 function safeName(s){let n=String(s||"").trim()||(records[0]&&records[0].eventName)||"running_timer";return n.replace(/[\\/:*?"<>|]/g,"_").replace(/\s+/g,"_").slice(0,80);}
-function fname(ext){return `${safeName(eventName.value)}_${new Date().toISOString().slice(0,10)}.${ext}`;}
+function fname(ext){const g=groupName.value?("_"+safeName(groupName.value)):"";return `${safeName(eventName.value)}${g}_${new Date().toISOString().slice(0,10)}.${ext}`;}
 function download(text,name,type){const blob=new Blob([text],{type});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},1000);}
 exportBtn.onclick=()=>{if(!records.length)return alert("ยังไม่มีข้อมูล");download("\ufeff"+toExcelHtml(records),fname("xls"),"application/vnd.ms-excel;charset=utf-8");};
 openBtn.onclick=()=>{if(!records.length)return alert("ยังไม่มีข้อมูล");const url=URL.createObjectURL(new Blob(["\ufeff"+toTsv(records)],{type:"text/plain;charset=utf-8"}));window.open(url,"_blank");setTimeout(()=>URL.revokeObjectURL(url),60000);};
