@@ -30,7 +30,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 <body>
 <header>
 <h1>แอปจับเวลาวิ่งนักกีฬา</h1>
-<div class="sub">แชร์แบบเดียวกับ Sport-Report • เลือกแอปและผู้รับได้</div>
+<div class="sub">แชร์ผลการแข่งขัน • รายการที่และกลุ่มที่อยู่เหนือตาราง</div>
 </header>
 <main>
 <section class="card" id="installBox">
@@ -54,8 +54,8 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 
 <section class="card">
 <div class="grid">
-<div><label>ชื่อกิจกรรม/รายการวิ่ง</label><input id="eventName" placeholder="เช่น วิ่ง 100 เมตร / ฝึกซ้อม"></div>
-<div><label>กลุ่ม</label><select id="groupName" style="width:100%;border:1px solid #334155;border-radius:14px;background:#020617;color:#f8fafc;padding:12px">
+<div><label>รายการที่</label><input id="eventName" placeholder="เช่น 101 / 202 / รายการที่ 1"></div>
+<div><label>กลุ่มที่</label><select id="groupName" style="width:100%;border:1px solid #334155;border-radius:14px;background:#020617;color:#f8fafc;padding:12px">
 <option value="">-- เลือกกลุ่ม --</option>
 <option>กลุ่ม 1</option><option>กลุ่ม 2</option><option>กลุ่ม 3</option><option>กลุ่ม 4</option><option>กลุ่ม 5</option>
 <option>กลุ่ม 6</option><option>กลุ่ม 7</option><option>กลุ่ม 8</option><option>กลุ่ม 9</option><option>กลุ่ม 10</option>
@@ -70,7 +70,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 <button class="primary" id="exportBtn">ดาวน์โหลดตาราง Excel</button>
 <button class="ghost" id="openBtn">เปิดตารางสำรอง</button>
 <button class="ghost" id="copyBtn">คัดลอกตาราง</button>
-<button class="primary" id="shareBtn">แชร์ตารางไป LINE/Messenger</button>
+<button class="primary" id="shareBtn">แชร์ผลการแข่งขัน</button>
 <button class="ghost" id="copyShareTableBtn">คัดลอกตารางสำหรับ LINE/Excel</button>
 <button class="warn" id="nextRaceBtn">การแข่งขันถัดไป</button>
 <button class="danger" id="clearResultsBtn">ล้างเฉพาะผล</button>
@@ -81,7 +81,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 
 <section class="card">
 <h3 style="margin:0 0 10px">ผลการจับเวลา</h3>
-<div style="overflow:auto"><table><thead><tr><th>ลำดับ</th><th>รายการ</th><th>เวลา mm:ss.000</th><th>มิลลิวินาที</th><th>กิจกรรม</th><th>กลุ่ม</th><th>วันเวลา</th><th></th></tr></thead><tbody id="results"></tbody></table></div>
+<div style="overflow:auto"><table><thead><tr><th>ลำดับ</th><th>รายการ</th><th>เวลา mm:ss.000</th><th>มิลลิวินาที</th><th>รายการที่</th><th>กลุ่มที่</th><th>วันเวลา</th><th></th></tr></thead><tbody id="results"></tbody></table></div>
 </section>
 <div class="footer">ข้อมูลถูกเก็บในเครื่องนี้ ใช้งานออฟไลน์ได้หลังเปิดใช้งานครั้งแรก</div>
 </main>
@@ -155,7 +155,7 @@ resetBtn.onclick=()=>{running=false;clearInterval(tick);elapsed=0;update();};
 testSoundBtn.onclick=async()=>{await playStartGun();setTimeout(()=>playRecordTick(),450);};
 window.deleteRecord=i=>{records.splice(i,1);save();renderRecords();};
 
-function tableRows(rows){const h=["ลำดับ","รายการ","เวลา mm:ss.000","มิลลิวินาที","กิจกรรม","กลุ่ม","วันเวลา"];return [h,...rows.map((r,i)=>[i+1,r.name,r.time,r.milliseconds,r.eventName,(r.groupName||""),r.datetime])];}
+function tableRows(rows){const h=["ลำดับ","รายการ","เวลา mm:ss.000","มิลลิวินาที","รายการที่","กลุ่มที่","วันเวลา"];return [h,...rows.map((r,i)=>[i+1,r.name,r.time,r.milliseconds,r.eventName,(r.groupName||""),r.datetime])];}
 function toTsv(rows){return tableRows(rows).map(row=>row.map(v=>String(v??"").replace(/\t/g," ").replace(/\r?\n/g," ")).join("\t")).join("\n");}
 function toExcelHtml(rows){const trs=tableRows(rows).map((row,ri)=>{const tag=ri===0?"th":"td";return "<tr>"+row.map(v=>`<${tag} style="border:1px solid #999;padding:6px;mso-number-format:'\\@';">${esc(v)}</${tag}>`).join("")+"</tr>";}).join("");return `<!doctype html><html><head><meta charset="utf-8"><style>table{border-collapse:collapse;font-family:Tahoma;font-size:12pt}th{background:#d9ead3}</style></head><body><table>${trs}</table></body></html>`;}
 function safeName(s){let n=String(s||"").trim()||(records[0]&&records[0].eventName)||"running_timer";return n.replace(/[\\/:*?"<>|]/g,"_").replace(/\s+/g,"_").slice(0,80);}
@@ -169,12 +169,12 @@ copyShareTableBtn.onclick=copyBtn.onclick;
 function buildShareText(){
   const eventText = eventName.value.trim() || "-";
   const groupText = groupName.value.trim() || "-";
-  const header = [
-    `ชื่อกิจกรรม/รายการวิ่ง\t${eventText}`,
-    `กลุ่ม\t${groupText}`,
-    ""
+  return [
+    `รายการที่\t${eventText}`,
+    `กลุ่มที่\t${groupText}`,
+    "",
+    toTsv(records)
   ].join("\n");
-  return header + toTsv(records);
 }
 
 shareBtn.onclick=async()=>{
@@ -191,7 +191,7 @@ shareBtn.onclick=async()=>{
   if(navigator.share){
     try{
       await navigator.share({
-        title:`${eventText} - ${groupText}`,
+        title:"ผลการแข่งขัน",
         text:shareText
       });
       return;
