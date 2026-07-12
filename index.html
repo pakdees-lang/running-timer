@@ -30,7 +30,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 <body>
 <header>
 <h1>แอปจับเวลาวิ่งนักกีฬา</h1>
-<div class="sub">แชร์ผลการแข่งขัน • รายการที่และกลุ่มที่อยู่เหนือตาราง</div>
+<div class="sub">รอบการแข่งขัน • กลุ่ม 1–2 • รอบรอง/รอบชิงใช้ -</div>
 </header>
 <main>
 <section class="card" id="installBox">
@@ -54,13 +54,30 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 
 <section class="card">
 <div class="grid">
-<div><label>รายการที่</label><input id="eventName" placeholder="เช่น 101 / 202 / รายการที่ 1"></div>
-<div><label>กลุ่มที่</label><select id="groupName" style="width:100%;border:1px solid #334155;border-radius:14px;background:#020617;color:#f8fafc;padding:12px">
-<option value="">-- เลือกกลุ่ม --</option>
-<option>กลุ่ม 1</option><option>กลุ่ม 2</option><option>กลุ่ม 3</option><option>กลุ่ม 4</option><option>กลุ่ม 5</option>
-<option>กลุ่ม 6</option><option>กลุ่ม 7</option><option>กลุ่ม 8</option><option>กลุ่ม 9</option><option>กลุ่ม 10</option>
-</select></div>
+<div>
+<label>รายการที่</label>
+<input id="eventName" placeholder="เช่น 101 / 202 / รายการที่ 1">
+</div>
 
+<div>
+<label>รอบการแข่งขัน</label>
+<select id="roundName" style="width:100%;border:1px solid #334155;border-radius:14px;background:#020617;color:#f8fafc;padding:12px">
+<option value="">-- เลือกรอบการแข่งขัน --</option>
+<option value="คัดเลือก">คัดเลือก</option>
+<option value="รองชิงชนะเลิศ">รองชิงชนะเลิศ</option>
+<option value="ชิงชนะเลิศ">ชิงชนะเลิศ</option>
+</select>
+</div>
+
+<div>
+<label>กลุ่มที่</label>
+<select id="groupName" style="width:100%;border:1px solid #334155;border-radius:14px;background:#020617;color:#f8fafc;padding:12px">
+<option value="">-- เลือกกลุ่ม --</option>
+<option value="กลุ่ม 1">กลุ่ม 1</option>
+<option value="กลุ่ม 2">กลุ่ม 2</option>
+<option value="-">-</option>
+</select>
+</div>
 </div>
 <div class="count" id="recordCount">บันทึกแล้ว 0/100 Lab</div>
 </section>
@@ -153,15 +170,19 @@ function renderRecords(){
 }
 
 function updateGroupByRound(){
-  const round = roundName.value;
-  if(round === "รองชิงชนะเลิศ" || round === "ชิงชนะเลิศ"){
+  const selectedRound = roundName.value;
+
+  if(selectedRound === "รองชิงชนะเลิศ" || selectedRound === "ชิงชนะเลิศ"){
     groupName.value = "-";
     groupName.disabled = true;
   }else{
     groupName.disabled = false;
-    if(groupName.value === "-") groupName.value = "";
+    if(groupName.value === "-"){
+      groupName.value = "";
+    }
   }
 }
+
 roundName.addEventListener("change", updateGroupByRound);
 
 startBtn.onclick=async()=>{if(!running){await playStartGun();running=true;startTime=performance.now();tick=setInterval(update,16);}};
