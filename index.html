@@ -30,7 +30,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 <body>
 <header>
 <h1>แอปจับเวลาวิ่งนักกีฬา</h1>
-<div class="sub">รอบการแข่งขัน • กลุ่ม 1–2 • รอบรอง/รอบชิงใช้ -</div>
+<div class="sub">รอบคัดเลือกและรอบชิงชนะเลิศ • รอบชิงใช้ -</div>
 </header>
 <main>
 <section class="card" id="installBox">
@@ -63,9 +63,8 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 <label>รอบการแข่งขัน</label>
 <select id="roundName" style="width:100%;border:1px solid #334155;border-radius:14px;background:#020617;color:#f8fafc;padding:12px">
 <option value="">-- เลือกรอบการแข่งขัน --</option>
-<option value="คัดเลือก">คัดเลือก</option>
-<option value="รองชิงชนะเลิศ">รองชิงชนะเลิศ</option>
-<option value="ชิงชนะเลิศ">ชิงชนะเลิศ</option>
+<option value="รอบคัดเลือก">รอบคัดเลือก</option>
+<option value="รอบชิงชนะเลิศ">รอบชิงชนะเลิศ</option>
 </select>
 </div>
 
@@ -156,7 +155,7 @@ function updateStatus(){recordCount.textContent=`บันทึกแล้ว 
 async function addLabRecord(ms){
   if(!eventName.value.trim()) return alert("กรุณาระบุรายการที่");
   if(!roundName.value.trim()) return alert("กรุณาเลือกรอบการแข่งขัน");
-  if(roundName.value === "คัดเลือก" && !groupName.value.trim()) return alert("กรุณาเลือกกลุ่มที่");
+  if(roundName.value === "รอบคัดเลือก" && !groupName.value.trim()) return alert("กรุณาเลือกกลุ่มที่");
   if(records.length>=MAX_RECORDS) return alert(`บันทึกครบ ${MAX_RECORDS} Lab แล้ว`);
   if(ms<=0) return alert("กรุณากดเริ่มจับเวลาก่อน");
   const lab=`Lab${records.length+1}`;
@@ -172,7 +171,7 @@ function renderRecords(){
 function updateGroupByRound(){
   const selectedRound = roundName.value;
 
-  if(selectedRound === "รองชิงชนะเลิศ" || selectedRound === "ชิงชนะเลิศ"){
+  if(selectedRound === "รอบชิงชนะเลิศ"){
     groupName.value = "-";
     groupName.disabled = true;
   }else{
