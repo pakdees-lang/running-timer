@@ -30,7 +30,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 <body>
 <header>
 <h1>แอปจับเวลาวิ่งนักกีฬา</h1>
-<div class="sub">รอบคัดเลือกและรอบชิงชนะเลิศ • รอบชิงใช้ -</div>
+<div class="sub">ข้อมูลรายการอยู่เหนือหัวตาราง • ตารางแสดงเฉพาะผลเวลา</div>
 </header>
 <main>
 <section class="card" id="installBox">
@@ -97,7 +97,8 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 
 <section class="card">
 <h3 style="margin:0 0 10px">ผลการจับเวลา</h3>
-<div style="overflow:auto"><table><thead><tr><th>ลำดับ</th><th>รายการ</th><th>เวลา mm:ss.000</th><th>มิลลิวินาที</th><th>รายการที่</th><th>รอบการแข่งขัน</th><th>กลุ่มที่</th><th>วันเวลา</th><th></th></tr></thead><tbody id="results"></tbody></table></div>
+<div id="resultInfo" style="margin-bottom:12px;line-height:1.8;color:#cbd5e1"></div>
+<div style="overflow:auto"><table><thead><tr><th>ลำดับ</th><th>รายการ</th><th>เวลา mm:ss.000</th><th>มิลลิวินาที</th><th></th></tr></thead><tbody id="results"></tbody></table></div>
 </section>
 <div class="footer">ข้อมูลถูกเก็บในเครื่องนี้ ใช้งานออฟไลน์ได้หลังเปิดใช้งานครั้งแรก</div>
 </main>
@@ -162,10 +163,27 @@ async function addLabRecord(ms){
   records.push({name:lab,time:format(ms),milliseconds:Math.round(ms),eventName:eventName.value.trim(),roundName:roundName.value.trim(),groupName:groupName.value.trim(),datetime:new Date().toLocaleString("th-TH")});
   save(); renderRecords(); await playRecordTick();
 }
+
+function updateResultInfo(){
+  const eventText = eventName.value.trim() || "-";
+  const roundText = roundName.value.trim() || "-";
+  const groupText = groupName.value.trim() || "-";
+  const dateTimeText = records.length && records[0].datetime
+    ? records[0].datetime
+    : new Date().toLocaleString("th-TH");
+
+  resultInfo.innerHTML =
+    `<div><b>รายการที่:</b> ${esc(eventText)}</div>` +
+    `<div><b>รอบการแข่งขัน:</b> ${esc(roundText)}</div>` +
+    `<div><b>กลุ่มที่:</b> ${esc(groupText)}</div>` +
+    `<div><b>วันเวลา:</b> ${esc(dateTimeText)}</div>`;
+}
+
 function renderRecords(){
   results.innerHTML="";
-  records.forEach((r,i)=>{const tr=document.createElement("tr");tr.innerHTML=`<td>${i+1}</td><td>${esc(r.name)}</td><td class="right">${r.time}</td><td class="right">${r.milliseconds}</td><td>${esc(r.eventName)}</td><td>${esc(r.roundName||"")}</td><td>${esc(r.groupName||"")}</td><td>${esc(r.datetime)}</td><td><button class="ghost" onclick="deleteRecord(${i})">ลบ</button></td>`;results.appendChild(tr);});
+  records.forEach((r,i)=>{const tr=document.createElement("tr");tr.innerHTML=`<td>${i+1}</td><td>${esc(r.name)}</td><td class="right">${r.time}</td><td class="right">${r.milliseconds}</td><td><button class="ghost" onclick="deleteRecord(${i})">ลบ</button></td>`;results.appendChild(tr);});
   updateStatus();
+  updateResultInfo();
 }
 
 function updateGroupByRound(){
@@ -184,6 +202,11 @@ function updateGroupByRound(){
 
 roundName.addEventListener("change", updateGroupByRound);
 
+eventName.addEventListener("input", updateResultInfo);
+roundName.addEventListener("change", updateResultInfo);
+groupName.addEventListener("change", updateResultInfo);
+
+
 startBtn.onclick=async()=>{if(!running){await playStartGun();running=true;startTime=performance.now();tick=setInterval(update,16);}};
 pauseBtn.onclick=async()=>{if(!running)return alert("กรุณากดเริ่มก่อน");elapsed+=performance.now()-startTime;running=false;clearInterval(tick);update();await addLabRecord(elapsed);};
 recordBtn.onclick=async()=>{await addLabRecord(currentElapsed());};
@@ -191,7 +214,7 @@ resetBtn.onclick=()=>{running=false;clearInterval(tick);elapsed=0;update();};
 testSoundBtn.onclick=async()=>{await playStartGun();setTimeout(()=>playRecordTick(),450);};
 window.deleteRecord=i=>{records.splice(i,1);save();renderRecords();};
 
-function tableRows(rows){const h=["ลำดับ","รายการ","เวลา mm:ss.000","มิลลิวินาที","รายการที่","รอบการแข่งขัน","กลุ่มที่","วันเวลา"];return [h,...rows.map((r,i)=>[i+1,r.name,r.time,r.milliseconds,r.eventName,(r.roundName||""),(r.groupName||""),r.datetime])];}
+function tableRows(rows){const h=["ลำดับ","รายการ","เวลา mm:ss.000","มิลลิวินาที"];return [h,...rows.map((r,i)=>[i+1,r.name,r.time,r.milliseconds])];}
 function toTsv(rows){return tableRows(rows).map(row=>row.map(v=>String(v??"").replace(/\t/g," ").replace(/\r?\n/g," ")).join("\t")).join("\n");}
 function toExcelHtml(rows){const trs=tableRows(rows).map((row,ri)=>{const tag=ri===0?"th":"td";return "<tr>"+row.map(v=>`<${tag} style="border:1px solid #999;padding:6px;mso-number-format:'\\@';">${esc(v)}</${tag}>`).join("")+"</tr>";}).join("");return `<!doctype html><html><head><meta charset="utf-8"><style>table{border-collapse:collapse;font-family:Tahoma;font-size:12pt}th{background:#d9ead3}</style></head><body><table>${trs}</table></body></html>`;}
 function safeName(s){let n=String(s||"").trim()||(records[0]&&records[0].eventName)||"running_timer";return n.replace(/[\\/:*?"<>|]/g,"_").replace(/\s+/g,"_").slice(0,80);}
@@ -206,10 +229,15 @@ function buildShareText(){
   const eventText = eventName.value.trim() || "-";
   const roundText = roundName.value.trim() || "-";
   const groupText = groupName.value.trim() || "-";
+  const dateTimeText = records.length && records[0].datetime
+    ? records[0].datetime
+    : new Date().toLocaleString("th-TH");
+
   return [
     `รายการที่\t${eventText}`,
     `รอบการแข่งขัน\t${roundText}`,
     `กลุ่มที่\t${groupText}`,
+    `วันเวลา\t${dateTimeText}`,
     "",
     toTsv(records)
   ].join("\n");
