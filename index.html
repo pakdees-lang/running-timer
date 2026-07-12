@@ -30,7 +30,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 <body>
 <header>
 <h1>แอปจับเวลาวิ่งนักกีฬา</h1>
-<div class="sub">แชร์เฉพาะข้อมูลในตาราง • เลือกแอปและผู้รับได้</div>
+<div class="sub">แชร์แบบเดียวกับ Sport-Report • เลือกแอปและผู้รับได้</div>
 </header>
 <main>
 <section class="card" id="installBox">
@@ -167,7 +167,14 @@ copyBtn.onclick=async()=>{if(!records.length)return alert("ยังไม่ม
 copyShareTableBtn.onclick=copyBtn.onclick;
 
 function buildShareText(){
-  return toTsv(records);
+  const eventText = eventName.value.trim() || "-";
+  const groupText = groupName.value.trim() || "-";
+  const header = [
+    `ชื่อกิจกรรม/รายการวิ่ง\t${eventText}`,
+    `กลุ่ม\t${groupText}`,
+    ""
+  ].join("\n");
+  return header + toTsv(records);
 }
 
 shareBtn.onclick=async()=>{
@@ -184,7 +191,7 @@ shareBtn.onclick=async()=>{
   if(navigator.share){
     try{
       await navigator.share({
-        title:"ผลการจับเวลา",
+        title:`${eventText} - ${groupText}`,
         text:shareText
       });
       return;
