@@ -24,13 +24,13 @@ label{display:block;color:var(--muted);font-size:13px;margin:8px 0 5px}.grid{dis
 table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid var(--line);padding:9px 6px;text-align:left}th{color:#cbd5e1}.right{text-align:right}
 .muted,.help,.footer{color:var(--muted)}.help{font-size:12px;line-height:1.5;margin-top:8px}.footer{font-size:12px;text-align:center;padding:18px}.count{color:#cbd5e1;font-size:13px;margin-top:10px}
 .nextBox{padding:12px;border:1px solid var(--line);border-radius:14px;background:#020617;margin-top:10px;text-align:center}.nextName{font-size:22px;font-weight:800;color:#bbf7d0}
-#installBox{display:none}@media(max-width:650px){.timer{font-size:42px}.grid{grid-template-columns:1fr}.row button{flex:1}.bigRecord{font-size:22px}}
+.lookupInfo{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.lookupItem{background:#020617;border:1px solid var(--line);border-radius:12px;padding:10px}.lookupItem span{display:block;color:var(--muted);font-size:12px}.lookupItem b{display:block;margin-top:3px}.settingsBox{margin-top:12px;border:1px solid var(--line);border-radius:14px;overflow:hidden}.settingsBox summary{padding:12px 14px;cursor:pointer;font-weight:700;background:#0b1220}.settingsContent{padding:12px}textarea{width:100%;min-height:260px;border:1px solid var(--line);border-radius:12px;background:#020617;color:var(--text);padding:10px;font:12px ui-monospace,monospace}#groupWrap.hidden{display:none}#installBox{display:none}@media(max-width:650px){.lookupInfo{grid-template-columns:1fr}.timer{font-size:42px}.grid{grid-template-columns:1fr}.row button{flex:1}.bigRecord{font-size:22px}}
 </style>
 </head>
 <body>
 <header>
 <h1>แอปจับเวลาวิ่งนักกีฬา</h1>
-<div class="sub">ข้อมูลรายการอยู่เหนือหัวตาราง • ตารางแสดงเฉพาะผลเวลา</div>
+<div class="sub">กรอกรายการที่แล้วดึงข้อมูลอัตโนมัติ • ตั้งค่าฐานข้อมูลซ่อนได้</div>
 </header>
 <main>
 <section class="card" id="installBox">
@@ -53,32 +53,164 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 </section>
 
 <section class="card">
-<div class="grid">
-<div>
-<label>รายการที่</label>
-<input id="eventName" placeholder="เช่น 101 / 202 / รายการที่ 1">
+<div class="grid" style="grid-template-columns:1fr 1fr">
+<div><label>รายการที่</label><input id="eventName" inputmode="numeric" placeholder="กรอกเลขรายการ เช่น 103"><div id="lookupStatus" class="help">กรอกเลขรายการ ระบบจะแสดงข้อมูลให้อัตโนมัติ</div></div>
+<div id="groupWrap"><label>กลุ่มที่</label><select id="groupName" style="width:100%;border:1px solid #334155;border-radius:14px;background:#020617;color:#f8fafc;padding:12px"><option value="">-- เลือกกลุ่ม --</option><option value="กลุ่ม 1">กลุ่ม 1</option><option value="กลุ่ม 2">กลุ่ม 2</option></select></div>
 </div>
-
-<div>
-<label>รอบการแข่งขัน</label>
-<select id="roundName" style="width:100%;border:1px solid #334155;border-radius:14px;background:#020617;color:#f8fafc;padding:12px">
-<option value="">-- เลือกรอบการแข่งขัน --</option>
-<option value="รอบคัดเลือก">รอบคัดเลือก</option>
-<option value="รอบชิงชนะเลิศ">รอบชิงชนะเลิศ</option>
-</select>
-</div>
-
-<div>
-<label>กลุ่มที่</label>
-<select id="groupName" style="width:100%;border:1px solid #334155;border-radius:14px;background:#020617;color:#f8fafc;padding:12px">
-<option value="">-- เลือกกลุ่ม --</option>
-<option value="กลุ่ม 1">กลุ่ม 1</option>
-<option value="กลุ่ม 2">กลุ่ม 2</option>
-<option value="-">-</option>
-</select>
-</div>
-</div>
+<div class="lookupInfo"><div class="lookupItem"><span>ประเภท</span><b id="eventType">-</b></div><div class="lookupItem"><span>รุ่นอายุ</span><b id="ageClass">-</b></div><div class="lookupItem"><span>รอบ</span><b id="roundDisplay">-</b></div></div>
 <div class="count" id="recordCount">บันทึกแล้ว 0/100 Lab</div>
+<details class="settingsBox"><summary>⚙️ ตั้งค่ารายการแข่งขัน</summary><div class="settingsContent"><div class="help">ข้อมูล 4 คอลัมน์: รายการที่, ประเภท, รุ่นอายุ, รอบ สามารถแก้ไขหรือวางข้อมูลใหม่แล้วกดบันทึกได้</div><textarea id="competitionData">รายการที่	ประเภท	รุ่นอายุ	รอบ
+101	วิ่ง 3,000 เมตร	16 ปี ชาย	ชิงชนะเลิศ
+102	วิ่ง 3,000 เมตร	16 ปี หญิง	ชิงชนะเลิศ
+103	วิ่ง 100 เมตร	6 ปี ชาย	คัดเลือก
+104	วิ่ง 100 เมตร	6 ปี หญิง	คัดเลือก
+105	วิ่ง 100 เมตร	8 ปี ชาย	คัดเลือก
+106	วิ่ง 100 เมตร	8 ปี หญิง	คัดเลือก
+107	วิ่ง 100 เมตร	10 ปี ชาย	คัดเลือก
+108	วิ่ง 100 เมตร	10 ปี หญิง	คัดเลือก
+109	วิ่ง 100 เมตร	12 ปี ชาย	คัดเลือก
+110	วิ่ง 100 เมตร	12 ปี หญิง	คัดเลือก
+111	วิ่ง 100 เมตร	14 ปี ชาย	ชิงชนะเลิศ
+112	วิ่ง 100 เมตร	14 ปี หญิง	ชิงชนะเลิศ
+113	วิ่ง 100 เมตร	16 ปี ชาย	ชิงชนะเลิศ
+114	วิ่ง 100 เมตร	16 ปี หญิง	ชิงชนะเลิศ
+115	วิ่ง 100 เมตร	6 ปี ชาย	ชิงชนะเลิศ
+116	วิ่ง 100 เมตร	6 ปี หญิง	ชิงชนะเลิศ
+117	วิ่ง 100 เมตร	8 ปี ชาย	ชิงชนะเลิศ
+118	วิ่ง 100 เมตร	8 ปี หญิง	ชิงชนะเลิศ
+119	วิ่ง 100 เมตร	10 ปี ชาย	ชิงชนะเลิศ
+120	วิ่ง 100 เมตร	10 ปี หญิง	ชิงชนะเลิศ
+121	วิ่ง 100 เมตร	12 ปี ชาย	ชิงชนะเลิศ
+122	วิ่ง 100 เมตร	12 ปี หญิง	ชิงชนะเลิศ
+123	วิ่งผลัด 4 × 300 เมตร	14 ปี ชาย	ชิงชนะเลิศ
+124	วิ่งผลัด 4 × 300 เมตร	14 ปี หญิง	ชิงชนะเลิศ
+125	วิ่งผลัด 4 × 300 เมตร	16 ปี ชาย	ชิงชนะเลิศ
+126	วิ่งผลัด 4 × 300 เมตร	16 ปี หญิง	ชิงชนะเลิศ
+127	ทุ่มน้ำหนัก	10 ปี ชาย	ชิงชนะเลิศ
+128	ทุ่มน้ำหนัก	10 ปี หญิง	ชิงชนะเลิศ
+129	ทุ่มน้ำหนัก	12 ปี ชาย	ชิงชนะเลิศ
+130	ทุ่มน้ำหนัก	12 ปี หญิง	ชิงชนะเลิศ
+131	ทุ่มน้ำหนัก	14 ปี ชาย	ชิงชนะเลิศ
+132	ทุ่มน้ำหนัก	14 ปี หญิง	ชิงชนะเลิศ
+133	ทุ่มน้ำหนัก	16 ปี ชาย	ชิงชนะเลิศ
+134	ทุ่มน้ำหนัก	16 ปี หญิง	ชิงชนะเลิศ
+135	โยนบอลใส่ตะกร้า	4 ปี ชาย	ชิงชนะเลิศ
+136	โยนบอลใส่ตะกร้า	4 ปี หญิง	ชิงชนะเลิศ
+137	โยนบอลใส่ตะกร้า	6 ปี ชาย	ชิงชนะเลิศ
+138	โยนบอลใส่ตะกร้า	6 ปี หญิง	ชิงชนะเลิศ
+201	วิ่ง 1,500 เมตร	14 ปี ชาย	ชิงชนะเลิศ
+202	วิ่ง 1,500 เมตร	14 ปี หญิง	ชิงชนะเลิศ
+203	วิ่ง 1,500 เมตร	16 ปี ชาย	ชิงชนะเลิศ
+204	วิ่ง 1,500 เมตร	16 ปี หญิง	ชิงชนะเลิศ
+205	วิ่ง 40 เมตร	4 ปี ชาย	คัดเลือก
+206	วิ่ง 40 เมตร	4 ปี หญิง	คัดเลือก
+207	วิ่ง 40 เมตร	6 ปี ชาย	คัดเลือก
+208	วิ่ง 40 เมตร	6 ปี หญิง	คัดเลือก
+209	วิ่งผลัด 4 × 400 เมตร	14 ปี ชาย	ชิงชนะเลิศ
+210	วิ่งผลัด 4 × 400 เมตร	14 ปี หญิง	ชิงชนะเลิศ
+211	วิ่งผลัด 4 × 400 เมตร	16 ปี ชาย	ชิงชนะเลิศ
+212	วิ่งผลัด 4 × 400 เมตร	16 ปี หญิง	ชิงชนะเลิศ
+213	วิ่ง 80 เมตร	6 ปี ชาย	คัดเลือก
+214	วิ่ง 80 เมตร	6 ปี หญิง	คัดเลือก
+215	วิ่ง 80 เมตร	8 ปี ชาย	คัดเลือก
+216	วิ่ง 80 เมตร	8 ปี หญิง	คัดเลือก
+217	วิ่ง 80 เมตร	10 ปี ชาย	คัดเลือก
+218	วิ่ง 80 เมตร	10 ปี หญิง	คัดเลือก
+219	วิ่ง 80 เมตร	12 ปี ชาย	คัดเลือก
+220	วิ่ง 80 เมตร	12 ปี หญิง	คัดเลือก
+221	วิ่ง 200 เมตร	10 ปี ชาย	คัดเลือก
+222	วิ่ง 200 เมตร	10 ปี หญิง	คัดเลือก
+223	วิ่ง 200 เมตร	12 ปี ชาย	คัดเลือก
+224	วิ่ง 200 เมตร	12 ปี หญิง	คัดเลือก
+225	วิ่งผลัด 5 × 80 เมตร	8 ปี ชาย	คัดเลือก
+226	วิ่งผลัด 5 × 80 เมตร	8 ปี หญิง	คัดเลือก
+227	วิ่งผลัด 5 × 80 เมตร	12 ปี ชาย	คัดเลือก
+228	วิ่งผลัด 5 × 80 เมตร	12 ปี หญิง	คัดเลือก
+229	วิ่ง 40 เมตร	4 ปี ชาย	ชิงชนะเลิศ
+230	วิ่ง 40 เมตร	4 ปี หญิง	ชิงชนะเลิศ
+231	วิ่ง 40 เมตร	6 ปี ชาย	ชิงชนะเลิศ
+232	วิ่ง 40 เมตร	6 ปี หญิง	ชิงชนะเลิศ
+233	วิ่ง 80 เมตร	6 ปี ชาย	ชิงชนะเลิศ
+234	วิ่ง 80 เมตร	6 ปี หญิง	ชิงชนะเลิศ
+235	วิ่ง 80 เมตร	8 ปี ชาย	ชิงชนะเลิศ
+236	วิ่ง 80 เมตร	8 ปี หญิง	ชิงชนะเลิศ
+237	วิ่ง 80 เมตร	10 ปี ชาย	ชิงชนะเลิศ
+238	วิ่ง 80 เมตร	10 ปี หญิง	ชิงชนะเลิศ
+239	วิ่ง 80 เมตร	12 ปี ชาย	ชิงชนะเลิศ
+240	วิ่ง 80 เมตร	12 ปี หญิง	ชิงชนะเลิศ
+241	วิ่ง 200 เมตร	16 ปี ชาย	ชิงชนะเลิศ
+242	วิ่ง 200 เมตร	16 ปี หญิง	ชิงชนะเลิศ
+243	วิ่ง 200 เมตร	14 ปี ชาย	ชิงชนะเลิศ
+244	วิ่ง 200 เมตร	14 ปี หญิง	ชิงชนะเลิศ
+245	วิ่ง 200 เมตร	12 ปี ชาย	ชิงชนะเลิศ
+246	วิ่ง 200 เมตร	12 ปี หญิง	ชิงชนะเลิศ
+247	วิ่ง 200 เมตร	10 ปี ชาย	ชิงชนะเลิศ
+248	วิ่ง 200 เมตร	10 ปี หญิง	ชิงชนะเลิศ
+249	วิ่ง 400 เมตร	14 ปี ชาย	ชิงชนะเลิศ
+250	วิ่ง 400 เมตร	14 ปี หญิง	ชิงชนะเลิศ
+251	วิ่ง 400 เมตร	16 ปี ชาย	ชิงชนะเลิศ
+252	วิ่ง 400 เมตร	16 ปี หญิง	ชิงชนะเลิศ
+253	วิ่งผลัด 5 × 80 เมตร	8 ปี ชาย	ชิงชนะเลิศ
+254	วิ่งผลัด 5 × 80 เมตร	8 ปี หญิง	ชิงชนะเลิศ
+255	วิ่งผลัด 5 × 80 เมตร	10 ปี ชาย	ชิงชนะเลิศ
+256	วิ่งผลัด 5 × 80 เมตร	10 ปี หญิง	ชิงชนะเลิศ
+257	วิ่งผลัด 5 × 80 เมตร	12 ปี ชาย	ชิงชนะเลิศ
+258	วิ่งผลัด 5 × 80 เมตร	12 ปี หญิง	ชิงชนะเลิศ
+259	ยืนกระโดด	4 ปี ชาย	ชิงชนะเลิศ
+260	ยืนกระโดด	4 ปี หญิง	ชิงชนะเลิศ
+261	ยืนกระโดด	6 ปี ชาย	ชิงชนะเลิศ
+262	ยืนกระโดด	6 ปี หญิง	ชิงชนะเลิศ
+263	วิ่งกระโดดไกล	8 ปี ชาย	ชิงชนะเลิศ
+264	วิ่งกระโดดไกล	8 ปี หญิง	ชิงชนะเลิศ
+265	วิ่งกระโดดไกล	10 ปี ชาย	ชิงชนะเลิศ
+266	วิ่งกระโดดไกล	10 ปี หญิง	ชิงชนะเลิศ
+267	วิ่งกระโดดไกล	12 ปี ชาย	ชิงชนะเลิศ
+268	วิ่งกระโดดไกล	12 ปี หญิง	ชิงชนะเลิศ
+269	วิ่งกระโดดไกล	14 ปี ชาย	ชิงชนะเลิศ
+270	วิ่งกระโดดไกล	14 ปี หญิง	ชิงชนะเลิศ
+271	วิ่งกระโดดไกล	16 ปี ชาย	ชิงชนะเลิศ
+272	วิ่งกระโดดไกล	16 ปี หญิง	ชิงชนะเลิศ
+301	วิ่ง 60 เมตร	4 ปี ชาย	คัดเลือก
+302	วิ่ง 60 เมตร	4 ปี หญิง	คัดเลือก
+303	วิ่ง 60 เมตร	6 ปี ชาย	คัดเลือก
+304	วิ่ง 60 เมตร	6 ปี หญิง	คัดเลือก
+305	วิ่ง 60 เมตร	8 ปี ชาย	คัดเลือก
+306	วิ่ง 60 เมตร	8 ปี หญิง	คัดเลือก
+307	วิ่ง 60 เมตร	10 ปี ชาย	คัดเลือก
+308	วิ่ง 60 เมตร	10 ปี หญิง	คัดเลือก
+309	วิ่ง 60 เมตร	12 ปี ชาย	คัดเลือก
+310	วิ่ง 60 เมตร	12 ปี หญิง	คัดเลือก
+311	วิ่ง 800 เมตร	14 ปี ชาย	ชิงชนะเลิศ
+312	วิ่ง 800 เมตร	14 ปี หญิง	ชิงชนะเลิศ
+313	วิ่ง 800 เมตร	16 ปี ชาย	ชิงชนะเลิศ
+314	วิ่ง 800 เมตร	16 ปี หญิง	ชิงชนะเลิศ
+315	วิ่งผลัด 4 × 100 เมตร	10 ปี หญิง	คัดเลือก
+316	วิ่งผลัด 4 × 100 เมตร	12 ปี ชาย	คัดเลือก
+317	วิ่งผลัด 4 × 100 เมตร	12 ปี หญิง	คัดเลือก
+318	วิ่ง 60 เมตร	4 ปี ชาย	ชิงชนะเลิศ
+319	วิ่ง 60 เมตร	4 ปี หญิง	ชิงชนะเลิศ
+320	วิ่ง 60 เมตร	6 ปี ชาย	ชิงชนะเลิศ
+321	วิ่ง 60 เมตร	6 ปี หญิง	ชิงชนะเลิศ
+322	วิ่ง 60 เมตร	8 ปี ชาย	ชิงชนะเลิศ
+323	วิ่ง 60 เมตร	8 ปี หญิง	ชิงชนะเลิศ
+324	วิ่ง 60 เมตร	10 ปี ชาย	ชิงชนะเลิศ
+325	วิ่ง 60 เมตร	10 ปี หญิง	ชิงชนะเลิศ
+326	วิ่ง 60 เมตร	12 ปี ชาย	ชิงชนะเลิศ
+327	วิ่ง 60 เมตร	12 ปี หญิง	ชิงชนะเลิศ
+328	วิ่งผลัด 4 × 100 เมตร	16 ปี ชาย	ชิงชนะเลิศ
+329	วิ่งผลัด 4 × 100 เมตร	16 ปี หญิง	ชิงชนะเลิศ
+330	วิ่งผลัด 4 × 100 เมตร	14 ปี ชาย	ชิงชนะเลิศ
+331	วิ่งผลัด 4 × 100 เมตร	14 ปี หญิง	ชิงชนะเลิศ
+332	วิ่งผลัด 4 × 100 เมตร	12 ปี ชาย	ชิงชนะเลิศ
+333	วิ่งผลัด 4 × 100 เมตร	12 ปี หญิง	ชิงชนะเลิศ
+334	วิ่งผลัด 4 × 100 เมตร	10 ปี ชาย	ชิงชนะเลิศ
+335	วิ่งผลัด 4 × 100 เมตร	10 ปี หญิง	ชิงชนะเลิศ
+336	วิ่งผลัด 3 × 800 เมตร	16 ปี ชาย	ชิงชนะเลิศ
+337	วิ่งผลัด 3 × 800 เมตร	16 ปี หญิง	ชิงชนะเลิศ
+338	ขว้างบอล	4 ปี ชาย	ชิงชนะเลิศ
+339	ขว้างบอล	4 ปี หญิง	ชิงชนะเลิศ
+340	ขว้างบอล	6 ปี ชาย	ชิงชนะเลิศ
+341	ขว้างบอล	6 ปี หญิง	ชิงชนะเลิศ</textarea><div class="row" style="margin-top:10px"><button class="primary" id="saveCompetitionBtn">บันทึกฐานข้อมูล</button><button class="ghost" id="resetCompetitionBtn">คืนค่าฐานข้อมูลเริ่มต้น</button></div><div id="dbStatus" class="help"></div></div></details>
 </section>
 
 <section class="card">
@@ -106,9 +238,31 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 <script>
 const MAX_RECORDS=100;
 let running=false,startTime=0,elapsed=0,tick=null;
-let records=JSON.parse(localStorage.getItem("records_v12")||localStorage.getItem("records_v11")||localStorage.getItem("records_v8")||localStorage.getItem("records")||"[]");
+let records=JSON.parse(localStorage.getItem("records_v23")||localStorage.getItem("records_v11")||localStorage.getItem("records_v8")||localStorage.getItem("records")||"[]");
 const $=id=>document.getElementById(id);
 let audioCtx=null;
+
+const DEFAULT_COMPETITION_DATA = competitionData.value;
+let competitionDB = {};
+function parseCompetitionData(text){
+  const map={}; const lines=String(text||"").trim().split(/\r?\n/).filter(Boolean);
+  lines.forEach((line,index)=>{const p=(line.includes("\t")?line.split("\t"):line.split(",")).map(s=>s.trim());if(index===0&&p[0]==="รายการที่")return;if(p.length>=4&&p[0])map[String(p[0])]={type:p[1],age:p[2],round:p[3]};});
+  return map;
+}
+function loadCompetitionDB(){const saved=localStorage.getItem("competition_data_v23");if(saved)competitionData.value=saved;competitionDB=parseCompetitionData(competitionData.value);dbStatus.textContent=`พบ ${Object.keys(competitionDB).length} รายการแข่งขัน`;}
+function currentCompetition(){return competitionDB[String(eventName.value||"").trim()]||null;}
+function lookupCompetition(){
+  const id=String(eventName.value||"").trim(), item=competitionDB[id];
+  if(!id){eventType.textContent=ageClass.textContent=roundDisplay.textContent="-";lookupStatus.textContent="กรอกเลขรายการ ระบบจะแสดงข้อมูลให้อัตโนมัติ";groupWrap.classList.remove("hidden");groupName.disabled=false;updateResultInfo();return;}
+  if(!item){eventType.textContent=ageClass.textContent=roundDisplay.textContent="-";lookupStatus.textContent=`ไม่พบรายการที่ ${id} ในฐานข้อมูล`;groupWrap.classList.remove("hidden");groupName.disabled=false;updateResultInfo();return;}
+  eventType.textContent=item.type;ageClass.textContent=item.age;roundDisplay.textContent=item.round;lookupStatus.textContent="พบข้อมูลรายการแข่งขันแล้ว";
+  if(item.round==="คัดเลือก"){groupWrap.classList.remove("hidden");groupName.disabled=false;if(groupName.value==="-")groupName.value="";}else{groupName.value="-";groupName.disabled=true;groupWrap.classList.add("hidden");}
+  updateResultInfo();
+}
+eventName.addEventListener("input",lookupCompetition);groupName.addEventListener("change",updateResultInfo);
+saveCompetitionBtn.onclick=()=>{const parsed=parseCompetitionData(competitionData.value),count=Object.keys(parsed).length;if(!count)return alert("ไม่พบข้อมูลรายการแข่งขันที่ถูกต้อง");localStorage.setItem("competition_data_v23",competitionData.value);competitionDB=parsed;dbStatus.textContent=`บันทึกแล้ว ${count} รายการแข่งขัน`;lookupCompetition();};
+resetCompetitionBtn.onclick=()=>{if(!confirm("คืนค่าฐานข้อมูลรายการแข่งขันเริ่มต้นหรือไม่?"))return;competitionData.value=DEFAULT_COMPETITION_DATA;localStorage.removeItem("competition_data_v23");loadCompetitionDB();lookupCompetition();};
+
 
 async function unlockAudio(){
   try{
@@ -150,33 +304,25 @@ async function playRecordTick(){
 function format(ms){const t=Math.floor(ms), milli=t%1000, sec=Math.floor(t/1000), s=sec%60, m=Math.floor(sec/60);return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}.${String(milli).padStart(3,"0")}`;}
 function currentElapsed(){return running?elapsed+(performance.now()-startTime):elapsed;}
 function update(){display.textContent=format(currentElapsed());}
-function save(){localStorage.setItem("records_v12",JSON.stringify(records));}
+function save(){localStorage.setItem("records_v23",JSON.stringify(records));}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
 function updateStatus(){recordCount.textContent=`บันทึกแล้ว ${records.length}/${MAX_RECORDS} Lab`; nextLab.textContent=records.length>=MAX_RECORDS?"บันทึกครบ 100 Lab แล้ว":`Lab${records.length+1}`;}
 async function addLabRecord(ms){
-  if(!eventName.value.trim()) return alert("กรุณาระบุรายการที่");
-  if(!roundName.value.trim()) return alert("กรุณาเลือกรอบการแข่งขัน");
-  if(roundName.value === "รอบคัดเลือก" && !groupName.value.trim()) return alert("กรุณาเลือกกลุ่มที่");
-  if(records.length>=MAX_RECORDS) return alert(`บันทึกครบ ${MAX_RECORDS} Lab แล้ว`);
-  if(ms<=0) return alert("กรุณากดเริ่มจับเวลาก่อน");
+  const comp=currentCompetition();
+  if(!eventName.value.trim())return alert("กรุณาระบุรายการที่");
+  if(!comp)return alert("ไม่พบรายการที่ในฐานข้อมูล");
+  if(comp.round==="คัดเลือก"&&!groupName.value.trim())return alert("กรุณาเลือกกลุ่มที่");
+  if(records.length>=MAX_RECORDS)return alert(`บันทึกครบ ${MAX_RECORDS} Lab แล้ว`);
+  if(ms<=0)return alert("กรุณากดเริ่มจับเวลาก่อน");
   const lab=`Lab${records.length+1}`;
-  records.push({name:lab,time:format(ms),milliseconds:Math.round(ms),eventName:eventName.value.trim(),roundName:roundName.value.trim(),groupName:groupName.value.trim(),datetime:new Date().toLocaleString("th-TH")});
-  save(); renderRecords(); await playRecordTick();
+  records.push({name:lab,time:format(ms),milliseconds:Math.round(ms),eventName:eventName.value.trim(),eventType:comp.type,ageClass:comp.age,roundName:comp.round,groupName:(comp.round==="คัดเลือก"?groupName.value.trim():"-"),datetime:new Date().toLocaleString("th-TH")});
+  save();renderRecords();await playRecordTick();
 }
 
 function updateResultInfo(){
-  const eventText = eventName.value.trim() || "-";
-  const roundText = roundName.value.trim() || "-";
-  const groupText = groupName.value.trim() || "-";
-  const dateTimeText = records.length && records[0].datetime
-    ? records[0].datetime
-    : new Date().toLocaleString("th-TH");
-
-  resultInfo.innerHTML =
-    `<div><b>รายการที่:</b> ${esc(eventText)}</div>` +
-    `<div><b>รอบการแข่งขัน:</b> ${esc(roundText)}</div>` +
-    `<div><b>กลุ่มที่:</b> ${esc(groupText)}</div>` +
-    `<div><b>วันเวลา:</b> ${esc(dateTimeText)}</div>`;
+  const comp=currentCompetition(), eventText=eventName.value.trim()||"-", typeText=comp?comp.type:"-", ageText=comp?comp.age:"-", roundText=comp?comp.round:"-", groupText=comp?(comp.round==="คัดเลือก"?(groupName.value||"-"):"-"):"-";
+  const dateTimeText=records.length&&records[0].datetime?records[0].datetime:new Date().toLocaleString("th-TH");
+  resultInfo.innerHTML=`<div><b>รายการที่:</b> ${esc(eventText)}</div><div><b>ประเภท:</b> ${esc(typeText)}</div><div><b>รุ่นอายุ:</b> ${esc(ageText)}</div><div><b>รอบ:</b> ${esc(roundText)}</div><div><b>กลุ่มที่:</b> ${esc(groupText)}</div><div><b>วันเวลา:</b> ${esc(dateTimeText)}</div>`;
 }
 
 function renderRecords(){
@@ -185,27 +331,6 @@ function renderRecords(){
   updateStatus();
   updateResultInfo();
 }
-
-function updateGroupByRound(){
-  const selectedRound = roundName.value;
-
-  if(selectedRound === "รอบชิงชนะเลิศ"){
-    groupName.value = "-";
-    groupName.disabled = true;
-  }else{
-    groupName.disabled = false;
-    if(groupName.value === "-"){
-      groupName.value = "";
-    }
-  }
-}
-
-roundName.addEventListener("change", updateGroupByRound);
-
-eventName.addEventListener("input", updateResultInfo);
-roundName.addEventListener("change", updateResultInfo);
-groupName.addEventListener("change", updateResultInfo);
-
 
 startBtn.onclick=async()=>{if(!running){await playStartGun();running=true;startTime=performance.now();tick=setInterval(update,16);}};
 pauseBtn.onclick=async()=>{if(!running)return alert("กรุณากดเริ่มก่อน");elapsed+=performance.now()-startTime;running=false;clearInterval(tick);update();await addLabRecord(elapsed);};
@@ -226,21 +351,9 @@ copyBtn.onclick=async()=>{if(!records.length)return alert("ยังไม่ม
 copyShareTableBtn.onclick=copyBtn.onclick;
 
 function buildShareText(){
-  const eventText = eventName.value.trim() || "-";
-  const roundText = roundName.value.trim() || "-";
-  const groupText = groupName.value.trim() || "-";
-  const dateTimeText = records.length && records[0].datetime
-    ? records[0].datetime
-    : new Date().toLocaleString("th-TH");
-
-  return [
-    `รายการที่\t${eventText}`,
-    `รอบการแข่งขัน\t${roundText}`,
-    `กลุ่มที่\t${groupText}`,
-    `วันเวลา\t${dateTimeText}`,
-    "",
-    toTsv(records)
-  ].join("\n");
+  const comp=currentCompetition(), eventText=eventName.value.trim()||"-", typeText=comp?comp.type:"-", ageText=comp?comp.age:"-", roundText=comp?comp.round:"-", groupText=comp?(comp.round==="คัดเลือก"?(groupName.value||"-"):"-"):"-";
+  const dateTimeText=records.length&&records[0].datetime?records[0].datetime:new Date().toLocaleString("th-TH");
+  return [`รายการที่\t${eventText}`,`ประเภท\t${typeText}`,`รุ่นอายุ\t${ageText}`,`รอบ\t${roundText}`,`กลุ่มที่\t${groupText}`,`วันเวลา\t${dateTimeText}`,"",toTsv(records)].join("\n");
 }
 
 shareBtn.onclick=async()=>{
@@ -277,7 +390,7 @@ window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPro
 installBtn.onclick=async()=>{if(!deferredPrompt)return alert("ให้เปิดเมนู Chrome แล้วเลือก เพิ่มไปยังหน้าจอหลัก");deferredPrompt.prompt();await deferredPrompt.userChoice;installBox.style.display="none";};
 hideInstallBtn.onclick=()=>{localStorage.setItem("hideInstallBox","1");installBox.style.display="none";};
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
-updateGroupByRound();renderRecords();update();
+loadCompetitionDB();lookupCompetition();renderRecords();update();
 </script>
 </body>
 </html>
