@@ -30,7 +30,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 <body>
 <header>
 <h1>แอปจับเวลาวิ่งนักกีฬา</h1>
-<div class="sub">กรอกรายการที่แล้วดึงข้อมูลอัตโนมัติ • ตั้งค่าฐานข้อมูลซ่อนได้</div>
+<div class="sub">ดาวน์โหลดแม่แบบและอัปโหลดฐานข้อมูลได้ • ตั้งค่าพับซ่อน</div>
 </header>
 <main>
 <section class="card" id="installBox">
@@ -59,7 +59,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 </div>
 <div class="lookupInfo"><div class="lookupItem"><span>ประเภท</span><b id="eventType">-</b></div><div class="lookupItem"><span>รุ่นอายุ</span><b id="ageClass">-</b></div><div class="lookupItem"><span>รอบ</span><b id="roundDisplay">-</b></div></div>
 <div class="count" id="recordCount">บันทึกแล้ว 0/100 Lab</div>
-<details class="settingsBox"><summary>⚙️ ตั้งค่ารายการแข่งขัน</summary><div class="settingsContent"><div class="help">ข้อมูล 4 คอลัมน์: รายการที่, ประเภท, รุ่นอายุ, รอบ สามารถแก้ไขหรือวางข้อมูลใหม่แล้วกดบันทึกได้</div><textarea id="competitionData">รายการที่	ประเภท	รุ่นอายุ	รอบ
+<details class="settingsBox"><summary>⚙️ ตั้งค่ารายการแข่งขัน</summary><div class="settingsContent"><div class="help">ดาวน์โหลดแม่แบบไปกรอกใน Excel แล้วบันทึกเป็น CSV, TSV หรือ TXT จากนั้นอัปโหลดกลับเข้าระบบ โดยใช้ 4 คอลัมน์: รายการที่, ประเภท, รุ่นอายุ, รอบ</div><textarea id="competitionData">รายการที่	ประเภท	รุ่นอายุ	รอบ
 101	วิ่ง 3,000 เมตร	16 ปี ชาย	ชิงชนะเลิศ
 102	วิ่ง 3,000 เมตร	16 ปี หญิง	ชิงชนะเลิศ
 103	วิ่ง 100 เมตร	6 ปี ชาย	คัดเลือก
@@ -210,7 +210,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 338	ขว้างบอล	4 ปี ชาย	ชิงชนะเลิศ
 339	ขว้างบอล	4 ปี หญิง	ชิงชนะเลิศ
 340	ขว้างบอล	6 ปี ชาย	ชิงชนะเลิศ
-341	ขว้างบอล	6 ปี หญิง	ชิงชนะเลิศ</textarea><div class="row" style="margin-top:10px"><button class="primary" id="saveCompetitionBtn">บันทึกฐานข้อมูล</button><button class="ghost" id="resetCompetitionBtn">คืนค่าฐานข้อมูลเริ่มต้น</button></div><div id="dbStatus" class="help"></div></div></details>
+341	ขว้างบอล	6 ปี หญิง	ชิงชนะเลิศ</textarea><div class="row" style="margin-top:10px"><button class="primary" id="downloadTemplateBtn">ดาวน์โหลดแม่แบบ</button><button class="ghost" id="uploadCompetitionBtn">อัปโหลดฐานข้อมูล</button><input id="competitionFileInput" type="file" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values,text/plain" style="display:none"><button class="primary" id="saveCompetitionBtn">บันทึกฐานข้อมูล</button><button class="ghost" id="resetCompetitionBtn">คืนค่าฐานข้อมูลเริ่มต้น</button></div><div id="dbStatus" class="help"></div></div></details>
 </section>
 
 <section class="card">
@@ -244,9 +244,58 @@ let audioCtx=null;
 
 const DEFAULT_COMPETITION_DATA = competitionData.value;
 let competitionDB = {};
+function splitDataLine(line){
+  if(line.includes("\t")) return line.split("\t").map(s=>s.trim());
+
+  const values=[];
+  let current="";
+  let inQuotes=false;
+
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch === '"'){
+      if(inQuotes && line[i+1] === '"'){
+        current += '"';
+        i++;
+      }else{
+        inQuotes = !inQuotes;
+      }
+    }else if((ch === "," || ch === ";") && !inQuotes){
+      values.push(current.trim());
+      current="";
+    }else{
+      current += ch;
+    }
+  }
+  values.push(current.trim());
+  return values;
+}
+
 function parseCompetitionData(text){
-  const map={}; const lines=String(text||"").trim().split(/\r?\n/).filter(Boolean);
-  lines.forEach((line,index)=>{const p=(line.includes("\t")?line.split("\t"):line.split(",")).map(s=>s.trim());if(index===0&&p[0]==="รายการที่")return;if(p.length>=4&&p[0])map[String(p[0])]={type:p[1],age:p[2],round:p[3]};});
+  const map={};
+  const lines=String(text||"")
+    .replace(/^\ufeff/,"")
+    .trim()
+    .split(/\r?\n/)
+    .filter(line=>line.trim());
+
+  lines.forEach((line,index)=>{
+    const parts=splitDataLine(line);
+    const first=String(parts[0]||"").replace(/^\ufeff/,"").trim();
+
+    if(index===0 && (first==="รายการที่" || first.toLowerCase()==="event")) return;
+    if(parts.length<4) return;
+
+    const id=first;
+    const type=String(parts[1]||"").trim();
+    const age=String(parts[2]||"").trim();
+    const round=String(parts[3]||"").trim();
+
+    if(id && type && age && round){
+      map[id]={type,age,round};
+    }
+  });
+
   return map;
 }
 function loadCompetitionDB(){const saved=localStorage.getItem("competition_data_v23");if(saved)competitionData.value=saved;competitionDB=parseCompetitionData(competitionData.value);dbStatus.textContent=`พบ ${Object.keys(competitionDB).length} รายการแข่งขัน`;}
@@ -260,8 +309,70 @@ function lookupCompetition(){
   updateResultInfo();
 }
 eventName.addEventListener("input",lookupCompetition);groupName.addEventListener("change",updateResultInfo);
+
+function downloadTextFile(content,filename,type){
+  const blob=new Blob([content],{type});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download=filename;
+  a.style.display="none";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{
+    a.remove();
+    URL.revokeObjectURL(url);
+  },1000);
+}
+
+downloadTemplateBtn.onclick=()=>{
+  const template=[
+    ["รายการที่","ประเภท","รุ่นอายุ","รอบ"],
+    ["101","วิ่ง 100 เมตร","12 ปี ชาย","คัดเลือก"],
+    ["102","วิ่ง 100 เมตร","12 ปี หญิง","ชิงชนะเลิศ"]
+  ].map(row=>row.join(",")).join("\n");
+
+  downloadTextFile(
+    "\ufeff"+template,
+    "แม่แบบฐานข้อมูลรายการแข่งขัน.csv",
+    "text/csv;charset=utf-8"
+  );
+};
+
+uploadCompetitionBtn.onclick=()=>{
+  competitionFileInput.value="";
+  competitionFileInput.click();
+};
+
+competitionFileInput.addEventListener("change",async()=>{
+  const file=competitionFileInput.files && competitionFileInput.files[0];
+  if(!file) return;
+
+  try{
+    const text=await file.text();
+    const parsed=parseCompetitionData(text);
+    const count=Object.keys(parsed).length;
+
+    if(!count){
+      alert("ไม่พบข้อมูลที่ถูกต้อง กรุณาตรวจสอบคอลัมน์ รายการที่ ประเภท รุ่นอายุ รอบ");
+      return;
+    }
+
+    competitionData.value=text.trim();
+    competitionDB=parsed;
+    localStorage.setItem("competition_data_v24",competitionData.value);
+    localStorage.removeItem("competition_data_v24");localStorage.removeItem("competition_data_v23");
+
+    dbStatus.textContent=`อัปโหลดสำเร็จ ${count} รายการแข่งขัน จากไฟล์ ${file.name}`;
+    lookupCompetition();
+    alert(`อัปโหลดฐานข้อมูลสำเร็จ ${count} รายการแข่งขัน`);
+  }catch(err){
+    alert("ไม่สามารถอ่านไฟล์ได้ กรุณาใช้ไฟล์ CSV, TSV หรือ TXT");
+  }
+});
+
 saveCompetitionBtn.onclick=()=>{const parsed=parseCompetitionData(competitionData.value),count=Object.keys(parsed).length;if(!count)return alert("ไม่พบข้อมูลรายการแข่งขันที่ถูกต้อง");localStorage.setItem("competition_data_v23",competitionData.value);competitionDB=parsed;dbStatus.textContent=`บันทึกแล้ว ${count} รายการแข่งขัน`;lookupCompetition();};
-resetCompetitionBtn.onclick=()=>{if(!confirm("คืนค่าฐานข้อมูลรายการแข่งขันเริ่มต้นหรือไม่?"))return;competitionData.value=DEFAULT_COMPETITION_DATA;localStorage.removeItem("competition_data_v23");loadCompetitionDB();lookupCompetition();};
+resetCompetitionBtn.onclick=()=>{if(!confirm("คืนค่าฐานข้อมูลรายการแข่งขันเริ่มต้นหรือไม่?"))return;competitionData.value=DEFAULT_COMPETITION_DATA;localStorage.removeItem("competition_data_v24");localStorage.removeItem("competition_data_v23");loadCompetitionDB();lookupCompetition();};
 
 
 async function unlockAudio(){
